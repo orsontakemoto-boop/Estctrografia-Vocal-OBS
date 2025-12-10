@@ -22,13 +22,31 @@ export const Spectrogram: React.FC = () => {
   const [hz, setHz] = useState<number>(0);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsInteraction, setNeedsInteraction] = useState(false);
 
   const startAudio = async () => {
+    // Se já existe e está suspenso, tenta retomar
+    if (audioContextRef.current) {
+      if (audioContextRef.current.state === 'suspended') {
+        try {
+          await audioContextRef.current.resume();
+          if (audioContextRef.current.state === 'running') {
+            setNeedsInteraction(false);
+          }
+        } catch (e) {
+          console.warn("Autoplay bloqueado pelo navegador, aguardando interação.");
+          setNeedsInteraction(true);
+        }
+      }
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const ctx = audioContextRef.current;
+      const AudioCtxClass = (window.AudioContext || (window as any).webkitAudioContext);
+      const ctx = new AudioCtxClass();
+      audioContextRef.current = ctx;
       
       analyserRef.current = ctx.createAnalyser();
       analyserRef.current.fftSize = 2048; // Resolution of frequency
@@ -36,6 +54,19 @@ export const Spectrogram: React.FC = () => {
 
       sourceRef.current = ctx.createMediaStreamSource(stream);
       sourceRef.current.connect(analyserRef.current);
+
+      // Tenta iniciar imediatamente
+      if (ctx.state === 'suspended') {
+        try {
+          await ctx.resume();
+        } catch(e) {
+           // Ignora erro aqui, verificamos estado abaixo
+        }
+      }
+
+      if (ctx.state === 'suspended') {
+        setNeedsInteraction(true);
+      }
 
       setIsReady(true);
       draw();
@@ -135,9 +166,25 @@ export const Spectrogram: React.FC = () => {
 
     window.addEventListener('resize', handleResize);
     handleResize();
+    
+    // Auto-start
+    startAudio();
+
+    // Generic interaction listener to unlock audio if needed
+    const unlockAudio = () => {
+        if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+            audioContextRef.current.resume().then(() => {
+                setNeedsInteraction(false);
+            });
+        }
+    };
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
       if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current);
       if (audioContextRef.current) audioContextRef.current.close();
     };
@@ -152,14 +199,14 @@ export const Spectrogram: React.FC = () => {
 
   return (
     <div ref={containerRef} className="relative w-full h-[300px] bg-transparent overflow-hidden group">
-      {/* Start Button Overlay (Only visible if not started) */}
-      {!isReady && !error && (
+      {/* Start Button Overlay (Only visible if interaction is strictly needed or error) */}
+      {(!isReady || needsInteraction) && !error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-50">
           <button 
             onClick={startAudio}
-            className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded shadow-lg transition"
+            className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded shadow-lg transition animate-pulse"
           >
-            Iniciar Espectrografia
+            {needsInteraction ? "Clique para Ativar Áudio" : "Iniciar Espectrografia"}
           </button>
         </div>
       )}
