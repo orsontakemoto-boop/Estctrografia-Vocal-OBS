@@ -1,0 +1,7 @@
+{
+  "name": "Espectrografia Vocal OBS",
+  "description": "Visualizador de espectro de áudio em tempo real com fundo transparente para OBS Studio.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

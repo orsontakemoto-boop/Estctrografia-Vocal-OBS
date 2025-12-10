@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Espectrografia Vocal OBS</title>
+    <!-- Mantemos o CDN do Tailwind para simplicidade neste setup, 
+         mas em um projeto maior seria ideal configurar postcss -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Ensure body background is transparent for OBS */
+      body, html {
+        background-color: transparent;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Prevent scrollbars in OBS */
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.1/",
+    "react/": "https://esm.sh/react@^19.2.1/",
+    "vite": "https://esm.sh/vite@^7.2.7",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
