@@ -1,3 +1,4 @@
+
 /**
  * Calculates the Root Mean Square (RMS) of the audio signal to determine volume.
  */
@@ -27,8 +28,6 @@ export const amplitudeToDecibels = (rms: number): number => {
  */
 export const autoCorrelate = (buffer: Float32Array, sampleRate: number): number => {
   const SIZE = buffer.length;
-  // Vocal range typically 85Hz to 1100Hz (Soprano High C is ~1046Hz)
-  // We trim the search area to avoid false positives at very low/high frequencies
   const MAX_SAMPLES = Math.floor(SIZE / 2);
   let bestOffset = -1;
   let bestCorrelation = 0;
@@ -42,7 +41,6 @@ export const autoCorrelate = (buffer: Float32Array, sampleRate: number): number 
   }
   rms = Math.sqrt(rms / SIZE);
 
-  // If signal is too quiet, return -1
   if (rms < 0.01) return -1;
 
   let lastCorrelation = 1;
@@ -54,10 +52,8 @@ export const autoCorrelate = (buffer: Float32Array, sampleRate: number): number 
       correlation += Math.abs((buffer[i]) - (buffer[i + offset]));
     }
     
-    // We want the difference to be close to 0 (similarity)
-    // Inverting it to find "peak" similarity
     correlation = 1 - (correlation / MAX_SAMPLES);
-    correlations[offset] = correlation; // Store for analysis if needed
+    correlations[offset] = correlation;
 
     if ((correlation > 0.9) && (correlation > lastCorrelation)) {
       foundGoodCorrelation = true;
@@ -66,7 +62,6 @@ export const autoCorrelate = (buffer: Float32Array, sampleRate: number): number 
         bestOffset = offset;
       }
     } else if (foundGoodCorrelation) {
-      // Gaussian interpolation for better precision
       const shift = (correlations[bestOffset + 1] - correlations[bestOffset - 1]) / (2 * (2 * correlations[bestOffset] - correlations[bestOffset + 1] - correlations[bestOffset - 1]));
       return sampleRate / (bestOffset + shift);
     }
@@ -82,35 +77,38 @@ export const autoCorrelate = (buffer: Float32Array, sampleRate: number): number 
 
 /**
  * Generates an RGB string based on intensity (0-255).
- * Low: White -> Yellow
- * High: Orange -> Red
+ * Uses a Cold-to-Warm (Blue -> Cyan -> Green -> Yellow -> Red) colormap.
  */
 export const getColorForIntensity = (value: number): string => {
-    // Thresholds
-    const lowEnd = 0;
-    const midPoint = 150; // Transition from Yellow to Orange
-    const highEnd = 255;
+    if (value < 2) return `rgba(0,0,0,0)`; // Quase silêncio é transparente
   
-    if (value < 5) return `rgba(0,0,0,0)`; // Transparent for silence
+    let r = 0, g = 0, b = 0;
   
-    let r, g, b;
-  
-    if (value <= midPoint) {
-      // Interpolate White (255, 255, 255) to Yellow (250, 204, 21)
-      const ratio = value / midPoint;
-      r = 255 - (5 * ratio); // 255 -> 250
-      g = 255 - (51 * ratio); // 255 -> 204
-      b = 255 - (234 * ratio); // 255 -> 21
+    // Escala térmica simplificada (0-255)
+    if (value < 64) {
+        // De Azul Escuro (0,0,100) para Azul Claro (0,150,255) - FRIO
+        const ratio = value / 64;
+        r = 0;
+        g = 150 * ratio;
+        b = 100 + (155 * ratio);
+    } else if (value < 128) {
+        // De Azul Claro (0,150,255) para Verde/Ciano (0,255,200)
+        const ratio = (value - 64) / 64;
+        r = 0;
+        g = 150 + (105 * ratio);
+        b = 255 - (55 * ratio);
+    } else if (value < 192) {
+        // De Verde (0,255,0) para Amarelo (255,255,0) - TRANSIÇÃO
+        const ratio = (value - 128) / 64;
+        r = 255 * ratio;
+        g = 255;
+        b = 0;
     } else {
-      // Interpolate Orange (249, 115, 22) to Red (239, 68, 68)
-      // Actually let's blend from Yellow end to Red
-      const ratio = (value - midPoint) / (highEnd - midPoint);
-      
-      // Start: Yellow (250, 204, 21)
-      // End: Red (239, 68, 68)
-      r = 250 - (11 * ratio);
-      g = 204 - (136 * ratio);
-      b = 21 + (47 * ratio);
+        // De Amarelo (255,255,0) para Vermelho (255,0,0) - QUENTE
+        const ratio = (value - 192) / 63;
+        r = 255;
+        g = 255 - (255 * ratio);
+        b = 0;
     }
   
     return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
