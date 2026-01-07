@@ -150,38 +150,41 @@ export const Spectrogram: React.FC = () => {
     const width = canvas.width;
     const height = canvas.height;
     
-    // Shift canvas to the left by SCROLL_SPEED
-    ctx.drawImage(canvas, SCROLL_SPEED, 0, width - SCROLL_SPEED, height, 0, 0, width - SCROLL_SPEED, height);
+    // Check if canvas has valid dimensions before drawing to avoid errors
+    if (width > 0 && height > 0) {
+      // Shift canvas to the left by SCROLL_SPEED
+      ctx.drawImage(canvas, SCROLL_SPEED, 0, width - SCROLL_SPEED, height, 0, 0, width - SCROLL_SPEED, height);
 
-    // Clear the rightmost strip
-    ctx.clearRect(width - SCROLL_SPEED, 0, SCROLL_SPEED, height);
+      // Clear the rightmost strip
+      ctx.clearRect(width - SCROLL_SPEED, 0, SCROLL_SPEED, height);
 
-    // Calculate Frequency mapping
-    const sampleRate = audioContextRef.current.sampleRate;
-    const nyquist = sampleRate / 2;
-    // Calculate which bin index corresponds to our min/max frequencies
-    const startBin = Math.floor((MIN_FREQ / nyquist) * bufferLength);
-    const endBin = Math.floor((MAX_FREQ / nyquist) * bufferLength);
-    // Ensure we don't go out of bounds
-    const safeEndBin = Math.min(bufferLength, endBin);
-    const rangeBins = safeEndBin - startBin;
+      // Calculate Frequency mapping
+      const sampleRate = audioContextRef.current.sampleRate;
+      const nyquist = sampleRate / 2;
+      // Calculate which bin index corresponds to our min/max frequencies
+      const startBin = Math.floor((MIN_FREQ / nyquist) * bufferLength);
+      const endBin = Math.floor((MAX_FREQ / nyquist) * bufferLength);
+      // Ensure we don't go out of bounds
+      const safeEndBin = Math.min(bufferLength, endBin);
+      const rangeBins = safeEndBin - startBin;
 
-    // Draw only the requested frequency range stretched to full height
-    for (let i = 0; i < rangeBins; i++) {
-      const dataIndex = startBin + i;
-      const value = dataArray[dataIndex];
-      
-      // Map 'i' (relative to our range) to the full canvas height
-      // i=0 (0Hz) -> Bottom (y=height)
-      // i=rangeBins (5000Hz) -> Top (y=0)
-      const y = height - 1 - Math.floor((i / rangeBins) * height);
-      
-      // Calculate bar height to cover gaps caused by stretching small ranges
-      const barHeight = Math.ceil(height / rangeBins) || 1;
+      // Draw only the requested frequency range stretched to full height
+      for (let i = 0; i < rangeBins; i++) {
+        const dataIndex = startBin + i;
+        const value = dataArray[dataIndex];
+        
+        // Map 'i' (relative to our range) to the full canvas height
+        // i=0 (0Hz) -> Bottom (y=height)
+        // i=rangeBins (5000Hz) -> Top (y=0)
+        const y = height - 1 - Math.floor((i / rangeBins) * height);
+        
+        // Calculate bar height to cover gaps caused by stretching small ranges
+        const barHeight = Math.ceil(height / rangeBins) || 1;
 
-      if (value > 0) {
-        ctx.fillStyle = getColorForIntensity(value);
-        ctx.fillRect(width - SCROLL_SPEED, y, SCROLL_SPEED, barHeight);
+        if (value > 0) {
+          ctx.fillStyle = getColorForIntensity(value);
+          ctx.fillRect(width - SCROLL_SPEED, y, SCROLL_SPEED, barHeight);
+        }
       }
     }
 

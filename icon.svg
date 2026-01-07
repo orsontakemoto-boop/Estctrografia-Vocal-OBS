@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="120" fill="#0f0f0f"/>
+  <rect x="86" y="256" width="50" height="150" rx="25" fill="#3b82f6" opacity="0.8">
+    <animate attributeName="height" values="150;200;120;150" dur="1s" repeatCount="indefinite" />
+    <animate attributeName="y" values="256;206;286;256" dur="1s" repeatCount="indefinite" />
+  </rect>
+  <rect x="156" y="180" width="50" height="226" rx="25" fill="#22c55e" opacity="0.9">
+    <animate attributeName="height" values="226;280;180;226" dur="1.2s" repeatCount="indefinite" />
+    <animate attributeName="y" values="180;126;226;180" dur="1.2s" repeatCount="indefinite" />
+  </rect>
+  <rect x="226" y="100" width="60" height="306" rx="30" fill="#eab308">
+    <animate attributeName="height" values="306;360;250;306" dur="0.8s" repeatCount="indefinite" />
+    <animate attributeName="y" values="100;46;156;100" dur="0.8s" repeatCount="indefinite" />
+  </rect>
+  <rect x="306" y="160" width="50" height="246" rx="25" fill="#f97316" opacity="0.9">
+    <animate attributeName="height" values="246;180;280;246" dur="1.1s" repeatCount="indefinite" />
+    <animate attributeName="y" values="160;226;126;160" dur="1.1s" repeatCount="indefinite" />
+  </rect>
+  <rect x="376" y="220" width="50" height="186" rx="25" fill="#ef4444" opacity="0.8">
+    <animate attributeName="height" values="186;120;220;186" dur="0.9s" repeatCount="indefinite" />
+    <animate attributeName="y" values="220;286;186;220" dur="0.9s" repeatCount="indefinite" />
+  </rect>
+</svg>
